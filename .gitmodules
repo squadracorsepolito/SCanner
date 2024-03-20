@@ -1,0 +1,3 @@
+[submodule "Lib/cannelloni_ports"]
+	path = Lib/cannelloni_ports
+	url = https://github.com/mguentner/cannelloni_ports

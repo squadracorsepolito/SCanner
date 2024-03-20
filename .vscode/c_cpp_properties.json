@@ -1,0 +1,41 @@
+{
+  "configurations": [
+    {
+      "name": "STM32",
+      "includePath": [
+        "Core/Inc",
+        "Drivers/BSP/Components/lan8742",
+        "Drivers/CMSIS/Device/ST/STM32H7xx/Include",
+        "Drivers/CMSIS/Include",
+        "Drivers/STM32H7xx_HAL_Driver/Inc",
+        "Drivers/STM32H7xx_HAL_Driver/Inc/Legacy",
+        "LWIP/App",
+        "LWIP/Target",
+        "Lib/cannelloni_ports/lwip",
+        "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
+        "Middlewares/Third_Party/FreeRTOS/Source/include",
+        "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F",
+        "Middlewares/Third_Party/LwIP/src/include",
+        "Middlewares/Third_Party/LwIP/src/include/compat/posix",
+        "Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa",
+        "Middlewares/Third_Party/LwIP/src/include/compat/posix/net",
+        "Middlewares/Third_Party/LwIP/src/include/compat/posix/sys",
+        "Middlewares/Third_Party/LwIP/src/include/compat/stdc",
+        "Middlewares/Third_Party/LwIP/src/include/lwip",
+        "Middlewares/Third_Party/LwIP/src/include/lwip/apps",
+        "Middlewares/Third_Party/LwIP/src/include/lwip/priv",
+        "Middlewares/Third_Party/LwIP/src/include/lwip/prot",
+        "Middlewares/Third_Party/LwIP/src/include/netif",
+        "Middlewares/Third_Party/LwIP/src/include/netif/ppp",
+        "Middlewares/Third_Party/LwIP/system",
+        "Middlewares/Third_Party/LwIP/system/arch"
+      ],
+      "defines": [
+        "STM32H743xx",
+        "USE_HAL_DRIVER"
+      ],
+      "compilerPath": "/usr/bin/arm-none-eabi-gcc"
+    }
+  ],
+  "version": 4
+}
