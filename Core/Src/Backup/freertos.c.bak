@@ -219,6 +219,7 @@ void StartDefaultTask(void *argument)
   MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
   HAL_UART_Transmit(&huart1, "dioca\r\n", 7, 10);
+  HAL_UART_Transmit(&huart1, HAL_GPIO_ReadPin(POWER_SOURCE_GPIO_Port, POWER_SOURCE_Pin) ? "H\r\n" : "L\r\n", 3, 10);
   /* Infinite loop */
   for(;;)
   {
