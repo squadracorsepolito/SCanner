@@ -21,7 +21,8 @@ typedef struct {
 typedef struct {
     struct {
         FDCAN_HandleTypeDef *const hfdcan;
-        FDCAN_FilterTypeDef sFilterConfig;
+        FDCAN_FilterTypeDef *const sFilterConfig;
+        uint8_t sFilterConfigN;
         uint32_t ActiveITs;
     } Init;
     QueueHandle_t rx_queue;

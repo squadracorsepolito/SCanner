@@ -19,8 +19,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "fatfs.h"
 #include "fdcan.h"
 #include "lwip.h"
+#include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -106,6 +108,8 @@ int main(void)
   MX_USART1_UART_Init();
   MX_FDCAN1_Init();
   MX_FDCAN2_Init();
+  MX_SDMMC1_SD_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
   
   /* USER CODE END 2 */
