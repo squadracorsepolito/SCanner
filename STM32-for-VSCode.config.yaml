@@ -67,6 +67,7 @@ excludes:
   - "**/example/**"
   - "**_template.*"
   - "Lib/cannelloni_ports/lwip/main_sample.c"
+  - "Middlewares/Third_Party/FatFs/**"
 
 
 # Include directories (directories containing .h or .hpp files)
@@ -78,6 +79,7 @@ includeDirectories:
   - Src/**
   - Core/Src/**
   - Lib/**
+  - "Middlewares/Third_Party/FatFs_MOD/**"
 
 
 # Files that should be included in the compilation.
@@ -89,6 +91,7 @@ sourceFiles:
   - Src/**
   - Core/Src/**
   - Lib/**
+  - "Middlewares/Third_Party/FatFs_MOD/**"
 
 
 # When no makefile is present it will show a warning pop-up.

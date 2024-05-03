@@ -191,6 +191,13 @@ SECTIONS
     *(.Rx_PoolSection)  
   } >RAM_D2
 
+    /* SD_CODE: add placement of DMA descriptors and RX buffers */
+  .sd_sec (NOLOAD) :
+  {
+    . = ABSOLUTE(0x24000000);
+    *(.fsSection)
+  } >RAM_D1
+
   /* Remove information from the standard libraries */
   /DISCARD/ :
   {

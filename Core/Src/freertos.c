@@ -28,6 +28,7 @@
 #include "usart.h"
 #include "cannelloni_task.h"
 #include "can_task.h"
+#include "fatfs.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -115,6 +116,18 @@ const osThreadAttr_t cnl2TaskName_attributes = {
   .stack_size = sizeof(cnl2TaskNameBuffer),
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for fatfsTaskName */
+osThreadId_t fatfsTaskNameHandle;
+uint32_t fatfsBuffer[ 1024 ];
+osStaticThreadDef_t fatfsControlBlock;
+const osThreadAttr_t fatfsTaskName_attributes = {
+  .name = "fatfsTaskName",
+  .cb_mem = &fatfsControlBlock,
+  .cb_size = sizeof(fatfsControlBlock),
+  .stack_mem = &fatfsBuffer[0],
+  .stack_size = sizeof(fatfsBuffer),
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for LWIP_InitEvent */
 osEventFlagsId_t LWIP_InitEventHandle;
 osStaticEventGroupDef_t LWIP_InitEventControlBlock;
@@ -132,6 +145,7 @@ const osEventFlagsAttr_t LWIP_InitEvent_attributes = {
 void StartDefaultTask(void *argument);
 extern void canTask(void *argument);
 extern void cannelloniTask(void *argument);
+void fatfsTask(void *argument);
 
 extern void MX_LWIP_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -192,6 +206,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of cnl2TaskName */
   cnl2TaskNameHandle = osThreadNew(cannelloniTask, (void*) &cnl2_handle, &cnl2TaskName_attributes);
 
+  /* creation of fatfsTaskName */
+  fatfsTaskNameHandle = osThreadNew(fatfsTask, NULL, &fatfsTaskName_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -212,6 +229,151 @@ void MX_FREERTOS_Init(void) {
   * @param  argument: Not used
   * @retval None
   */
+#include <string.h>
+#include <stdarg.h>
+void UART_Printf(const char* fmt, ...) {
+  char buff[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buff, sizeof(buff), fmt, args);
+  HAL_UART_Transmit(&huart1, (uint8_t*)buff, strlen(buff), HAL_MAX_DELAY);
+  va_end(args);
+}
+
+FATFS fs;
+uint8_t buffer[_MAX_SS] __attribute__((section(".fsSection")));
+
+void dioca() {
+  fs.win = buffer;
+    FRESULT res;
+    UART_Printf("Ready!\r\n");
+
+    // mount the default drive
+    res = f_mount(&fs, "", 0);
+    if(res != FR_OK) {
+        UART_Printf("f_mount() failed, res = %d\r\n", res);
+        return;
+    }
+
+    UART_Printf("f_mount() done!\r\n");
+
+    uint32_t freeClust;
+    FATFS* fs_ptr = &fs;
+    res = f_getfree("", &freeClust, &fs_ptr); // Warning! This fills fs.n_fatent and fs.csize!
+    if(res != FR_OK) {
+        UART_Printf("f_getfree() failed, res = %d\r\n", res);
+        return;
+    }
+
+    UART_Printf("f_getfree() done!\r\n");
+
+    uint32_t totalBlocks = (fs.n_fatent - 2) * fs.csize;
+    uint32_t freeBlocks = freeClust * fs.csize;
+
+    UART_Printf("Total blocks: %lu (%lu Mb)\r\n", totalBlocks, totalBlocks / 2000);
+    UART_Printf("Free blocks: %lu (%lu Mb)\r\n", freeBlocks, freeBlocks / 2000);
+
+    DIR dir;
+    res = f_opendir(&dir, "/");
+    if(res != FR_OK) {
+        UART_Printf("f_opendir() failed, res = %d\r\n", res);
+        return;
+    }
+
+    FILINFO fileInfo;
+    uint32_t totalFiles = 0;
+    uint32_t totalDirs = 0;
+    UART_Printf("--------\r\nRoot directory:\r\n");
+    for(;;) {
+        res = f_readdir(&dir, &fileInfo);
+        if((res != FR_OK) || (fileInfo.fname[0] == '\0')) {
+            break;
+        }
+        
+        if(fileInfo.fattrib & AM_DIR) {
+            UART_Printf("  DIR  %s\r\n", fileInfo.fname);
+            totalDirs++;
+        } else {
+            UART_Printf("  FILE %s\r\n", fileInfo.fname);
+            totalFiles++;
+        }
+    }
+
+    UART_Printf("(total: %lu dirs, %lu files)\r\n--------\r\n", totalDirs, totalFiles);
+
+    res = f_closedir(&dir);
+    if(res != FR_OK) {
+        UART_Printf("f_closedir() failed, res = %d\r\n", res);
+        return;
+    }
+
+    UART_Printf("Writing to log.txt...\r\n");
+
+    char writeBuff[128];
+    snprintf(writeBuff, sizeof(writeBuff), "Total blocks: %lu (%lu Mb); Free blocks: %lu (%lu Mb)\r\n",
+        totalBlocks, totalBlocks / 2000,
+        freeBlocks, freeBlocks / 2000);
+
+    FIL logFile;
+    res = f_open(&logFile, "log.txt", FA_OPEN_APPEND | FA_WRITE);
+    if(res != FR_OK) {
+        UART_Printf("f_open() failed, res = %d\r\n", res);
+        return;
+    }
+
+    unsigned int bytesToWrite = strlen(writeBuff);
+    unsigned int bytesWritten;
+    res = f_write(&logFile, writeBuff, bytesToWrite, &bytesWritten);
+    if(res != FR_OK) {
+        UART_Printf("f_write() failed, res = %d\r\n", res);
+        return;
+    }
+
+    if(bytesWritten < bytesToWrite) {
+        UART_Printf("WARNING! Disk is full, bytesToWrite = %lu, bytesWritten = %lu\r\n", bytesToWrite, bytesWritten);
+    }
+
+    res = f_close(&logFile);
+    if(res != FR_OK) {
+        UART_Printf("f_close() failed, res = %d\r\n", res);
+        return;
+    }
+
+    UART_Printf("Reading file...\r\n");
+    FIL msgFile;
+    res = f_open(&msgFile, "log.txt", FA_READ);
+    if(res != FR_OK) {
+        UART_Printf("f_open() failed, res = %d\r\n", res);
+        return;
+    }
+
+    char readBuff[128];
+    unsigned int bytesRead;
+    res = f_read(&msgFile, readBuff, sizeof(readBuff)-1, &bytesRead);
+    if(res != FR_OK) {
+        UART_Printf("f_read() failed, res = %d\r\n", res);
+        return;
+    }
+
+    readBuff[bytesRead] = '\0';
+    UART_Printf("```\r\n%s\r\n```\r\n", readBuff);
+
+    res = f_close(&msgFile);
+    if(res != FR_OK) {
+        UART_Printf("f_close() failed, res = %d\r\n", res);
+        return;
+    }
+
+    // Unmount
+    res = f_mount(NULL, "", 0);
+    if(res != FR_OK) {
+        UART_Printf("Unmount failed, res = %d\r\n", res);
+        return;
+    }
+
+    UART_Printf("Done!\r\n");
+    }
+
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
@@ -219,6 +381,9 @@ void StartDefaultTask(void *argument)
   MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
   HAL_UART_Transmit(&huart1, "dioca\r\n", 7, 10);
+
+  // dioca();
+
   /* Infinite loop */
   for(;;)
   {
@@ -226,6 +391,25 @@ void StartDefaultTask(void *argument)
     osDelay(100);
   }
   /* USER CODE END StartDefaultTask */
+}
+
+/* USER CODE BEGIN Header_fatfsTask */
+/**
+* @brief Function implementing the fatfsTaskName thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_fatfsTask */
+__weak void fatfsTask(void *argument)
+{
+  /* USER CODE BEGIN fatfsTask */
+  dioca();
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END fatfsTask */
 }
 
 /* Private application code --------------------------------------------------*/

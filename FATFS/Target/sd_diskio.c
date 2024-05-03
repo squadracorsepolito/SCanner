@@ -22,6 +22,8 @@
 
 /* USER CODE BEGIN firstSection */
 /* can be used to modify / undefine following code or add new definitions */
+#define ENABLE_SD_DMA_CACHE_MAINTENANCE  1 
+#define ENABLE_SCRATCH_BUFFER 
 /* USER CODE END firstSection*/
 
 /* Includes ------------------------------------------------------------------*/

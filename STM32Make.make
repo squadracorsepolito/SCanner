@@ -83,10 +83,11 @@ FATFS/Target/sd_diskio.c \
 LWIP/App/lwip.c \
 LWIP/Target/ethernetif.c \
 Lib/cannelloni_ports/lwip/cannelloni.c \
-Middlewares/Third_Party/FatFs/src/diskio.c \
-Middlewares/Third_Party/FatFs/src/ff.c \
-Middlewares/Third_Party/FatFs/src/ff_gen_drv.c \
-Middlewares/Third_Party/FatFs/src/option/syscall.c \
+Middlewares/Third_Party/FatFs_MOD/src/diskio.c \
+Middlewares/Third_Party/FatFs_MOD/src/ff.c \
+Middlewares/Third_Party/FatFs_MOD/src/ff_gen_drv.c \
+Middlewares/Third_Party/FatFs_MOD/src/option/syscall.c \
+Middlewares/Third_Party/FatFs_MOD/src/option/unicode.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
 Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
 Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
@@ -260,7 +261,7 @@ C_INCLUDES =  \
 -ILWIP/App \
 -ILWIP/Target \
 -ILib/cannelloni_ports/lwip \
--IMiddlewares/Third_Party/FatFs/src \
+-IMiddlewares/Third_Party/FatFs_MOD/src \
 -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 \
 -IMiddlewares/Third_Party/FreeRTOS/Source/include \
 -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
