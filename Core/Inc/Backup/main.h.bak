@@ -58,6 +58,7 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 #define LWIP_Init_Done 0x1
+#define SDCARD_Init_Done 0x2
 #define SELF_KILL_Pin GPIO_PIN_0
 #define SELF_KILL_GPIO_Port GPIOA
 #define SD_DET_Pin GPIO_PIN_3

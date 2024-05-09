@@ -37,7 +37,7 @@ static void ethernet_link_status_updated(struct netif *netif);
 void Error_Handler(void);
 
 /* USER CODE BEGIN 1 */
-extern osEventFlagsId_t LWIP_InitEventHandle;
+extern osEventFlagsId_t System_InitEventHandle;
 /* USER CODE END 1 */
 
 /* Variables Initialization */
@@ -117,7 +117,7 @@ void MX_LWIP_Init(void)
 /* USER CODE BEGIN 3 */
   /* ETH_CODE: call UNLOCK_TCPIP_CORE after we are done */
   UNLOCK_TCPIP_CORE();
-  osEventFlagsSet(LWIP_InitEventHandle, LWIP_Init_Done);
+  osEventFlagsSet(System_InitEventHandle, LWIP_Init_Done);
 /* USER CODE END 3 */
 }
 

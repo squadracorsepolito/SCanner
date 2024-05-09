@@ -1,5 +1,6 @@
 #include "can_task.h"
 #include "usart.h"
+#include "sdcard_task.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -119,7 +120,7 @@ void canTask(const void * argument) {
 }
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
-    BaseType_t hptw; //useless;
+    BaseType_t hptw = pdFALSE;
     CAN_frame_t frame;
     FDCAN_RxHeaderTypeDef rx_h;
 
@@ -129,11 +130,13 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         frame.dlc = rx_h.DataLength;
 
         xQueueSendToBackFromISR(can1_network.rx_queue, &frame, &hptw);
+        sdcardAddMsgFromISR(&frame, CAN_NET1, &hptw);
+        portYIELD_FROM_ISR( hptw );
     }
 }
 
 void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs) {
-    BaseType_t hptw; //useless;
+    BaseType_t hptw = pdFALSE;
     CAN_frame_t frame;
     FDCAN_RxHeaderTypeDef rx_h;
 
@@ -143,5 +146,7 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs)
         frame.dlc = rx_h.DataLength;
 
         xQueueSendToBackFromISR(can2_network.rx_queue, &frame, &hptw);
+        sdcardAddMsgFromISR(&frame, CAN_NET2, &hptw);
+        portYIELD_FROM_ISR( hptw );
     }
 }

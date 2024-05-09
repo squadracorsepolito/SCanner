@@ -43,7 +43,7 @@ cannelloni_handle_t cnl2_handle = {
     }
 };
 
-extern osEventFlagsId_t LWIP_InitEventHandle;
+extern osEventFlagsId_t System_InitEventHandle;
 
 void cnl1_can_rx(cannelloni_handle_t *const handle) {
     while(canIsFramePending(&can1_network)) {
@@ -94,7 +94,7 @@ bool cnl2_can_tx(cannelloni_handle_t *const handle, struct canfd_frame *const fr
 void cannelloniTask(const void * argument) {
     cannelloni_handle_t *const handle = (cannelloni_handle_t *const)argument;
 
-    osEventFlagsWait(LWIP_InitEventHandle, LWIP_Init_Done, osFlagsWaitAny, portMAX_DELAY);
+    osEventFlagsWait(System_InitEventHandle, LWIP_Init_Done, osFlagsWaitAny, portMAX_DELAY);
 
     LOCK_TCPIP_CORE();
     init_cannelloni(handle);

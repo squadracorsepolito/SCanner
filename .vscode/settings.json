@@ -4,6 +4,7 @@
     "files.associations": {
         "freertos.h": "c",
         "freertosconfig.h": "c",
-        "fatfs.h": "c"
+        "fatfs.h": "c",
+        "can_task.h": "c"
     }
 }
