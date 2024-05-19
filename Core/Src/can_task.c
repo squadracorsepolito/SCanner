@@ -1,9 +1,12 @@
 #include "can_task.h"
 #include "usart.h"
 #include "sdcard_task.h"
+#include "tim.h"
 
 #include <string.h>
 #include <stdio.h>
+
+uint16_t wrapAroundCounter = 0;
 
 FDCAN_FilterTypeDef can1_filters[] = {
     {
@@ -71,6 +74,9 @@ void canInit(FDCAN_HandleTypeDef *const hfdcan, FDCAN_FilterTypeDef *const sFilt
         Error_Handler();
     }
 
+    HAL_TIM_Base_Start_IT(&htim3);
+    HAL_FDCAN_EnableTimestampCounter(hfdcan, FDCAN_TIMESTAMP_EXTERNAL);
+    
     // Start FDCAN
     if(HAL_FDCAN_Start(hfdcan)!= HAL_OK)
     {
@@ -123,6 +129,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     BaseType_t hptw = pdFALSE;
     CAN_frame_t frame;
     FDCAN_RxHeaderTypeDef rx_h;
+    uint32_t exCounter = wrapAroundCounter << 16;
 
     if(RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_h, frame.data);
@@ -130,7 +137,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         frame.dlc = rx_h.DataLength;
 
         xQueueSendToBackFromISR(can1_network.rx_queue, &frame, &hptw);
-        sdcardAddMsgFromISR(&frame, CAN_NET1, &hptw);
+        sdcardAddMsgFromISR(&frame, CAN_NET1, exCounter | rx_h.RxTimestamp, &hptw);
         portYIELD_FROM_ISR( hptw );
     }
 }
@@ -139,6 +146,7 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs)
     BaseType_t hptw = pdFALSE;
     CAN_frame_t frame;
     FDCAN_RxHeaderTypeDef rx_h;
+    uint32_t exCounter = wrapAroundCounter << 16;
 
     if(RxFifo1ITs & FDCAN_IT_RX_FIFO1_NEW_MESSAGE) {
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO1, &rx_h, frame.data);
@@ -146,7 +154,11 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs)
         frame.dlc = rx_h.DataLength;
 
         xQueueSendToBackFromISR(can2_network.rx_queue, &frame, &hptw);
-        sdcardAddMsgFromISR(&frame, CAN_NET2, &hptw);
+        sdcardAddMsgFromISR(&frame, CAN_NET2, exCounter | rx_h.RxTimestamp, &hptw);
         portYIELD_FROM_ISR( hptw );
     }
+}
+
+void can_task_inc_wac(void) {
+    ++wrapAroundCounter;
 }

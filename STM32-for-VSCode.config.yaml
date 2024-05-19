@@ -69,6 +69,8 @@ excludes:
   - "**_template.*"
   - "Lib/cannelloni_ports/lwip/main_sample.c"
   - "Middlewares/Third_Party/FatFs/**"
+  - "Middlewares/Third_Party/LwIP/src/apps/http/fsdata.c"
+  - "Middlewares/Third_Party/LwIP/src/apps/http/fsdata.h"
 
 
 # Include directories (directories containing .h or .hpp files)

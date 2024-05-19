@@ -41,13 +41,17 @@ Core/Src/cannelloni_task.c \
 Core/Src/fdcan.c \
 Core/Src/freertos.c \
 Core/Src/gpio.c \
+Core/Src/http_server.c \
 Core/Src/main.c \
+Core/Src/sdcard.c \
 Core/Src/sdcard_task.c \
 Core/Src/sdmmc.c \
 Core/Src/stm32h7xx_hal_msp.c \
 Core/Src/stm32h7xx_hal_timebase_tim.c \
 Core/Src/stm32h7xx_it.c \
 Core/Src/system_stm32h7xx.c \
+Core/Src/tftp_if.c \
+Core/Src/tim.c \
 Core/Src/usart.c \
 Drivers/BSP/Components/lan8742/lan8742.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c \
@@ -108,7 +112,10 @@ Middlewares/Third_Party/LwIP/src/api/netdb.c \
 Middlewares/Third_Party/LwIP/src/api/netifapi.c \
 Middlewares/Third_Party/LwIP/src/api/sockets.c \
 Middlewares/Third_Party/LwIP/src/api/tcpip.c \
+Middlewares/Third_Party/LwIP/src/apps/http/fs.c \
+Middlewares/Third_Party/LwIP/src/apps/http/httpd.c \
 Middlewares/Third_Party/LwIP/src/apps/mqtt/mqtt.c \
+Middlewares/Third_Party/LwIP/src/apps/tftp/tftp_server.c \
 Middlewares/Third_Party/LwIP/src/core/altcp.c \
 Middlewares/Third_Party/LwIP/src/core/altcp_alloc.c \
 Middlewares/Third_Party/LwIP/src/core/altcp_tcp.c \
@@ -266,6 +273,7 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 \
 -IMiddlewares/Third_Party/FreeRTOS/Source/include \
 -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
+-IMiddlewares/Third_Party/LwIP/src/apps/http \
 -IMiddlewares/Third_Party/LwIP/src/include \
 -IMiddlewares/Third_Party/LwIP/src/include/compat/posix \
 -IMiddlewares/Third_Party/LwIP/src/include/compat/posix/arpa \

@@ -1,0 +1,106 @@
+#include "tftp_task.h"
+
+#include "FreeRTOS.h"
+#include "lwip.h"
+#include "lwip/apps/tftp_server.h"
+#include "fatfs.h"
+#include "sdcard.h"
+
+#include <string.h>
+
+extern osEventFlagsId_t System_InitEventHandle;
+
+void* open(const char* fname, const char* mode, u8_t write);
+void close(void* handle);
+int read(void* handle, void* buf, int bytes);
+int write(void* handle, struct pbuf* p);
+
+char buffer[64];
+
+struct tftp_context ctx = {
+    .open = open,
+    .close = close,
+    .read = read,
+    .write = write
+};
+
+void tftpTask(void *argument) {
+    osEventFlagsWait(System_InitEventHandle, SDCARD_Init_Done, osFlagsWaitAny, portMAX_DELAY);
+    LOCK_TCPIP_CORE();
+    tftp_init(&ctx);
+    UNLOCK_TCPIP_CORE();
+}
+
+void* open(const char* fname, const char* mode, u8_t write) {
+    char *idp = strstr(fname, "index");
+    if(idp) {
+        buffer[0] = '/';
+        strncpy(buffer+1, fname, fname-idp);
+        return buffer;
+    }
+
+    return sdcard_fopen(fname, FA_OPEN_APPEND | FA_WRITE, portMAX_DELAY);
+}
+
+void close(void* handle) {
+    if(handle == buffer) {
+        return;
+    }
+
+    sdcard_fclose(handle);
+}
+
+int read(void* handle, void* buf, int bytes) {
+    FRESULT res;
+    uint32_t br;
+
+    if(handle == buffer) {
+        char *cur = buf;
+        DIR dir;
+        res = f_opendir(&dir, (char*)buffer);
+        if(res != FR_OK) {
+            return 0;
+        }
+
+        FILINFO fileInfo;
+        for(;;) {
+            res = f_readdir(&dir, &fileInfo);
+            if((res != FR_OK) || (fileInfo.fname[0] == '\0')) {
+                break;
+            }
+
+            if(fileInfo.fattrib & AM_DIR) {
+                snprintf(cur, (char*)buf+bytes-cur, "D - %s\r\n", fileInfo.fname);
+            } else {
+                snprintf(cur, (char*)buf+bytes-cur, "F - %s\r\n", fileInfo.fname);
+            }
+        }
+        f_closedir(&dir);
+
+        return cur-(char*)buf;
+    }
+    
+    res = f_read(handle, buf, bytes, (UINT*)&br);
+    if(res != FR_OK) {
+        return 0;
+    }
+    return br;
+}
+
+int write(void* handle, struct pbuf* p) {
+    FRESULT res;
+    uint32_t tot_bw, bw;
+    if(handle == buffer) {
+        return 0;
+    }
+
+    do {
+        res = f_write(handle, p->payload, p->len, (UINT*)&bw);
+        if(res != FR_OK) {
+            return tot_bw;
+        }
+        tot_bw += bw;
+    } while(p->next && p->tot_len > p->len);
+
+    return tot_bw;
+}

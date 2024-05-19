@@ -18,6 +18,7 @@
         "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
         "Middlewares/Third_Party/FreeRTOS/Source/include",
         "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F",
+        "Middlewares/Third_Party/LwIP/src/apps/http",
         "Middlewares/Third_Party/LwIP/src/include",
         "Middlewares/Third_Party/LwIP/src/include/compat/posix",
         "Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa",
