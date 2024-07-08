@@ -35,6 +35,7 @@ typedef struct {
     StaticQueue_t tx_static_queue;
 } canNetwork_t;
 
+void canEnable(FDCAN_HandleTypeDef *const hfdcan, uint32_t ActiveITs);
 uint8_t canSend(CAN_frame_t *const frame, canNetwork_t *const network, uint32_t ticksToWait);
 uint8_t canRecv(CAN_frame_t *const frame, canNetwork_t *const network, uint32_t ticksToWait);
 uint8_t canIsFramePending(canNetwork_t *const network);

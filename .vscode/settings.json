@@ -16,6 +16,7 @@
         "fs.h": "c",
         "httpd_opts.h": "c",
         "string.h": "c",
-        "usart.h": "c"
+        "usart.h": "c",
+        "http_server.h": "c"
     }
 }

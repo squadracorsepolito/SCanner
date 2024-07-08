@@ -55,7 +55,7 @@ void close(void* handle) {
 
 int read(void* handle, void* buf, int bytes) {
     FRESULT res;
-    uint32_t br, brtot;
+    uint32_t br, brtot=0;
 
     if(handle == buffer) {
         char *cur = buf;

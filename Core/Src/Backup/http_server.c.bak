@@ -3,6 +3,7 @@
 #include "sdcard.h"
 #include "fatfs.h"
 #include "fs.h"
+#include "httpd.h"
 
 #include <string.h>
 
@@ -13,6 +14,12 @@ typedef struct {
     void *p;
     char name[256];
 } http_uri;
+
+void http_server_init(void) {
+  LOCK_TCPIP_CORE();
+  httpd_init();
+  UNLOCK_TCPIP_CORE();
+}
 
 int fs_open_custom(struct fs_file *file, const char *name) {
     FRESULT res;

@@ -27,6 +27,7 @@ void sdcardInit() {
     uint16_t max = 0;
     uint16_t current;
     char dirname[16];
+    char filename1[32], filename2[32];
 
     res = f_opendir(&dir, "/");
     if(res != FR_OK) {
@@ -50,9 +51,11 @@ void sdcardInit() {
 
     snprintf(dirname, 16, "%u", max+1);
     f_mkdir(dirname);
-    f_chdir(dirname);
-    res = sdcard_fopen_logger(&f1, "mcb.txt", FA_OPEN_APPEND | FA_WRITE, &f2, "hvcb.txt", FA_OPEN_APPEND | FA_WRITE);
-    f_chdir("/");
+    
+    snprintf(filename1, sizeof(filename1), "%s/mcb.log", dirname);
+    snprintf(filename2, sizeof(filename2), "%s/hvcb.log", dirname);
+
+    res = sdcard_fopen_logger(&f1, filename1, FA_OPEN_APPEND | FA_WRITE, &f2, filename2, FA_OPEN_APPEND | FA_WRITE);
     if(res != FR_OK) {
         return;
     }
@@ -75,13 +78,14 @@ void sdcardTask(void *argument) {
     UINT bw;
     osEventFlagsWait(System_InitEventHandle, SDCARD_Init_Done, osFlagsWaitAny, portMAX_DELAY);
     sdcardInit();
+    uint32_t now = osKernelGetTickCount();
 
     while(1) {
         data_s[0] = 0;
         buf[0] = 0;
         if(xQueueReceive(sdcardQueue, &msg, pdMS_TO_TICKS(1000)) == pdPASS) {
             for(uint8_t i=0; i<msg.frame.dlc; ++i) {
-                sprintf(data_s+2*i, "%2x", msg.frame.data[i]);
+                sprintf(data_s+2*i, "%02x", msg.frame.data[i]);
             }
             btw = sprintf(buf, "(%.6f) %s %03x#%s\r\n", (float)msg.timestamp/100000, msg.net == CAN_NET1 ? "mcb":"hvcb", msg.frame.id, data_s);
 
@@ -89,6 +93,11 @@ void sdcardTask(void *argument) {
                 f_write(f1, buf, btw, &bw);
             } else {
                 f_write(f2, buf, btw, &bw);
+            }
+
+            if(osKernelGetSysTimerCount() - now > 2000) {
+                f_sync(f1);
+                f_sync(f2);
             }
         } else {
             f_sync(f1);

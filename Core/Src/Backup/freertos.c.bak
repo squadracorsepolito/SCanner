@@ -30,9 +30,9 @@
 #include "can_task.h"
 #include "fatfs.h"
 #include "sdcard.h"
-#include "httpd.h"
 #include "fs.h"
 #include "tftp_if.h"
+#include "http_server.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -133,6 +133,18 @@ const osThreadAttr_t sdcardTaskName_attributes = {
   .stack_size = sizeof(sdcardTaskNameBuffer),
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for InitTaskName */
+osThreadId_t InitTaskNameHandle;
+uint32_t InitTaskNameBuffer[ 128 ];
+osStaticThreadDef_t InitTaskNameControlBlock;
+const osThreadAttr_t InitTaskName_attributes = {
+  .name = "InitTaskName",
+  .cb_mem = &InitTaskNameControlBlock,
+  .cb_size = sizeof(InitTaskNameControlBlock),
+  .stack_mem = &InitTaskNameBuffer[0],
+  .stack_size = sizeof(InitTaskNameBuffer),
+  .priority = (osPriority_t) osPriorityHigh,
+};
 /* Definitions for SDCARD_FILE_LOCK */
 osMutexId_t SDCARD_FILE_LOCKHandle;
 osStaticMutexDef_t SDCARD_FILE_LOCKControlBlock;
@@ -167,6 +179,7 @@ void StartDefaultTask(void *argument);
 extern void canTask(void *argument);
 extern void cannelloniTask(void *argument);
 extern void sdcardTask(void *argument);
+void InitTask(void *argument);
 
 extern void MX_LWIP_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -236,6 +249,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of sdcardTaskName */
   sdcardTaskNameHandle = osThreadNew(sdcardTask, NULL, &sdcardTaskName_attributes);
 
+  /* creation of InitTaskName */
+  InitTaskNameHandle = osThreadNew(InitTask, NULL, &InitTaskName_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -262,18 +278,40 @@ void StartDefaultTask(void *argument)
   MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
   HAL_UART_Transmit(&huart1, (uint8_t*)"dioca\r\n", 7, 10);
-  sdcard_init();
-  LOCK_TCPIP_CORE();
-  httpd_init();
-  UNLOCK_TCPIP_CORE();
-  tftp_if_init();
   /* Infinite loop */
   for(;;)
   {
     HAL_UART_Transmit(&huart1, (uint8_t*)(HAL_GPIO_ReadPin(POWER_SOURCE_GPIO_Port, POWER_SOURCE_Pin) ? "H\r" : "L\r"), 2, 10);
-    osDelay(100);
+    osDelay(1000);
   }
   /* USER CODE END StartDefaultTask */
+}
+
+/* USER CODE BEGIN Header_InitTask */
+/**
+* @brief Function implementing the InitTaskName thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_InitTask */
+void InitTask(void *argument)
+{
+  /* USER CODE BEGIN InitTask */
+  sdcard_init();
+
+  http_server_init();
+  tftp_if_init();
+
+  canEnable(can1_network.Init.hfdcan, can1_network.Init.ActiveITs);
+  canEnable(can2_network.Init.hfdcan, can2_network.Init.ActiveITs);
+
+  vTaskDelete(NULL);
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END InitTask */
 }
 
 /* Private application code --------------------------------------------------*/

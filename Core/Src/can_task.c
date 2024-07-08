@@ -58,20 +58,22 @@ canNetwork_t can2_network = {
     .rx_static_queue = NULL
 };
 
-void canInit(FDCAN_HandleTypeDef *const hfdcan, FDCAN_FilterTypeDef *const sFilterConfig, uint8_t sFilterConfigN, uint32_t ActiveITs) {
+void canEnable(FDCAN_HandleTypeDef *const hfdcan, uint32_t ActiveITs) {
+    // Activate the notification for new data in FIFO for FDCAN
+    if (HAL_FDCAN_ActivateNotification(hfdcan, ActiveITs, 0) != HAL_OK)
+    {
+        /* Notification Error */
+        Error_Handler();
+    }
+}
+
+void canInit(FDCAN_HandleTypeDef *const hfdcan, FDCAN_FilterTypeDef *const sFilterConfig, uint8_t sFilterConfigN) {
     for (uint8_t i=0; i<sFilterConfigN; ++i) {
         if (HAL_FDCAN_ConfigFilter(hfdcan, sFilterConfig + i) != HAL_OK)
         {
             /* Filter configuration Error */
             Error_Handler();
         }
-    }
-
-    // Activate the notification for new data in FIFO for FDCAN
-    if (HAL_FDCAN_ActivateNotification(hfdcan, ActiveITs, 0) != HAL_OK)
-    {
-        /* Notification Error */
-        Error_Handler();
     }
 
     HAL_TIM_Base_Start_IT(&htim3);
@@ -104,7 +106,7 @@ void canTask(const void * argument) {
     network->rx_queue = xQueueCreateStatic(CAN_QUEUE_SIZE, sizeof(CAN_frame_t), network->rx_buf, &network->rx_static_queue);
     network->tx_queue = xQueueCreateStatic(CAN_QUEUE_SIZE, sizeof(CAN_frame_t), network->tx_buf, &network->tx_static_queue);
 
-    canInit(network->Init.hfdcan, network->Init.sFilterConfig, network->Init.sFilterConfigN, network->Init.ActiveITs);
+    canInit(network->Init.hfdcan, network->Init.sFilterConfig, network->Init.sFilterConfigN);
 
     TxHeader.IdType = FDCAN_STANDARD_ID;
     TxHeader.TxFrameType = FDCAN_DATA_FRAME;
