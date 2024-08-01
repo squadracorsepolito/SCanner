@@ -49,6 +49,8 @@ Core/Src/sdmmc.c \
 Core/Src/stm32h7xx_hal_msp.c \
 Core/Src/stm32h7xx_hal_timebase_tim.c \
 Core/Src/stm32h7xx_it.c \
+Core/Src/syscalls.c \
+Core/Src/sysmem.c \
 Core/Src/system_stm32h7xx.c \
 Core/Src/tftp_if.c \
 Core/Src/tim.c \

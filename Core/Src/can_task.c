@@ -67,6 +67,15 @@ void canEnable(FDCAN_HandleTypeDef *const hfdcan, uint32_t ActiveITs) {
     }
 }
 
+void canDisable(FDCAN_HandleTypeDef *const hfdcan, uint32_t ActiveITs) {
+    // Activate the notification for new data in FIFO for FDCAN
+    if (HAL_FDCAN_DeactivateNotification(hfdcan, ActiveITs) != HAL_OK)
+    {
+        /* Notification Error */
+        Error_Handler();
+    }
+}
+
 void canInit(FDCAN_HandleTypeDef *const hfdcan, FDCAN_FilterTypeDef *const sFilterConfig, uint8_t sFilterConfigN) {
     for (uint8_t i=0; i<sFilterConfigN; ++i) {
         if (HAL_FDCAN_ConfigFilter(hfdcan, sFilterConfig + i) != HAL_OK)

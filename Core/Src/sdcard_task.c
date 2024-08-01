@@ -70,6 +70,11 @@ uint32_t sdcardAddMsgFromISR(CAN_frame_t *frame, CAN_NETWORK net, uint32_t times
     return xQueueSendToBackFromISR(sdcardQueue, &msg, hptw);
 }
 
+void sdcardForceSync(void) {
+    f_sync(f1);
+    f_sync(f2);
+}
+
 void sdcardTask(void *argument) {
     char buf[256];
     char data_s[17];
@@ -85,7 +90,7 @@ void sdcardTask(void *argument) {
         buf[0] = 0;
         if(xQueueReceive(sdcardQueue, &msg, pdMS_TO_TICKS(1000)) == pdPASS) {
             for(uint8_t i=0; i<msg.frame.dlc; ++i) {
-                sprintf(data_s+2*i, "%02x", msg.frame.data[i]);
+                sprintf(data_s+2*i, "%02X", msg.frame.data[i]);
             }
             btw = sprintf(buf, "(%.6f) %s %03x#%s\r\n", (float)msg.timestamp/100000, msg.net == CAN_NET1 ? "mcb":"hvcb", msg.frame.id, data_s);
 
@@ -96,6 +101,7 @@ void sdcardTask(void *argument) {
             }
 
             if(osKernelGetSysTimerCount() - now > 2000) {
+                now = osKernelGetTickCount();
                 f_sync(f1);
                 f_sync(f2);
             }

@@ -299,6 +299,10 @@ void InitTask(void *argument)
   /* USER CODE BEGIN InitTask */
   sdcard_init();
 
+  // osDelay(1000);
+
+  osEventFlagsWait(System_InitEventHandle, LWIP_Init_Done, osFlagsWaitAny, portMAX_DELAY);
+
   http_server_init();
   tftp_if_init();
 

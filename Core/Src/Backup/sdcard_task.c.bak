@@ -78,13 +78,14 @@ void sdcardTask(void *argument) {
     UINT bw;
     osEventFlagsWait(System_InitEventHandle, SDCARD_Init_Done, osFlagsWaitAny, portMAX_DELAY);
     sdcardInit();
+    uint32_t now = osKernelGetTickCount();
 
     while(1) {
         data_s[0] = 0;
         buf[0] = 0;
         if(xQueueReceive(sdcardQueue, &msg, pdMS_TO_TICKS(1000)) == pdPASS) {
             for(uint8_t i=0; i<msg.frame.dlc; ++i) {
-                sprintf(data_s+2*i, "%2x", msg.frame.data[i]);
+                sprintf(data_s+2*i, "%02x", msg.frame.data[i]);
             }
             btw = sprintf(buf, "(%.6f) %s %03x#%s\r\n", (float)msg.timestamp/100000, msg.net == CAN_NET1 ? "mcb":"hvcb", msg.frame.id, data_s);
 
@@ -92,6 +93,12 @@ void sdcardTask(void *argument) {
                 f_write(f1, buf, btw, &bw);
             } else {
                 f_write(f2, buf, btw, &bw);
+            }
+
+            if(osKernelGetSysTimerCount() - now > 2000) {
+                now = osKernelGetTickCount();
+                f_sync(f1);
+                f_sync(f2);
             }
         } else {
             f_sync(f1);

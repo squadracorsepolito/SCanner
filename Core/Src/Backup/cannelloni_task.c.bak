@@ -102,6 +102,6 @@ void cannelloniTask(const void * argument) {
 
     while(1) {
         run_cannelloni(handle);
-        vTaskDelay(10);
+        vTaskDelay(100);
     }
 }

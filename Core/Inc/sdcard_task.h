@@ -7,5 +7,6 @@
 void sdcardInit();
 uint32_t sdcardAddMsgFromISR(CAN_frame_t *frame, CAN_NETWORK net, uint32_t timestamp, BaseType_t *hptw);
 void sdcardTask(void *argument);
+void sdcardForceSync(void);
 
 #endif // SDCARD_TASK_H

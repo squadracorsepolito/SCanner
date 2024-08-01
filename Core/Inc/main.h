@@ -63,8 +63,10 @@ void Error_Handler(void);
 #define SELF_KILL_GPIO_Port GPIOA
 #define SD_DET_Pin GPIO_PIN_3
 #define SD_DET_GPIO_Port GPIOA
-#define POWER_SOURCE_Pin GPIO_PIN_6
-#define POWER_SOURCE_GPIO_Port GPIOC
+#define nRST_PHY_GPIO_OUT_Pin GPIO_PIN_15
+#define nRST_PHY_GPIO_OUT_GPIO_Port GPIOB
+#define GPIO_nST_Pin GPIO_PIN_6
+#define GPIO_nST_GPIO_Port GPIOC
 
 /* USER CODE BEGIN Private defines */
 
