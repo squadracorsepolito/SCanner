@@ -32,6 +32,8 @@
 #include "sdcard.h"
 #include "fs.h"
 #include "sdcard_task.h"
+#include "http_server.h"
+#include "tftp_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -133,7 +135,7 @@ const osThreadAttr_t sdcardTaskName_attributes = {
 };
 /* Definitions for InitTaskName */
 osThreadId_t InitTaskNameHandle;
-uint32_t InitTaskNameBuffer[ 128 ];
+uint32_t InitTaskNameBuffer[ 512 ];
 osStaticThreadDef_t InitTaskNameControlBlock;
 const osThreadAttr_t InitTaskName_attributes = {
   .name = "InitTaskName",
@@ -286,6 +288,7 @@ void StartDefaultTask(void *argument)
 * @param argument: Not used
 * @retval None
 */
+extern char dirname[16];
 /* USER CODE END Header_InitTask */
 void InitTask(void *argument)
 {
@@ -302,23 +305,37 @@ void InitTask(void *argument)
   canEnable(can1_network.Init.hfdcan, can1_network.Init.ActiveITs);
   canEnable(can2_network.Init.hfdcan, can2_network.Init.ActiveITs);
 
-  osThreadExit();
+  uint32_t not_val;
+  char new_dirname[32];
+
+  while(1) {
+    if(xTaskNotifyWait(0, 0x1, &not_val, portMAX_DELAY)) {
+      // HAL_UART_Transmit(&huart1, "starting self-kill procedure\r\n", 30, 10);
+
+      canDisable(can1_network.Init.hfdcan, can1_network.Init.ActiveITs);
+      canDisable(can2_network.Init.hfdcan, can2_network.Init.ActiveITs);
+      
+      sdcardForceSync();
+      sdcard_deinit();
+
+      // sprintf(new_dirname, "%s_%lus", dirname, osKernelGetTickCount()/osKernelGetTickFreq());
+      // volatile FRESULT res = f_rename(dirname, new_dirname);
+
+      f_mount(NULL, "", 0);
+
+      HAL_GPIO_WritePin(SELF_KILL_GPIO_Port, SELF_KILL_Pin, GPIO_PIN_SET); // self-kill
+    }
+  }
   /* USER CODE END InitTask */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   BaseType_t hptw;
-  if(GPIO_Pin == EXTI_LINE6) { //power source switched to backup battery
-    HAL_UART_Transmit(&huart1, "starting self-kill procedure\r\n", 30, 10);
-    
-    canDisable(can1_network.Init.hfdcan, can1_network.Init.ActiveITs);
-    canDisable(can2_network.Init.hfdcan, can2_network.Init.ActiveITs);
-    
-    sdcardForceSync();
-    HAL_GPIO_WritePin(SELF_KILL_GPIO_Port, SELF_KILL_Pin, GPIO_PIN_SET); // self-kill
+  if(GPIO_Pin == 64) { //power source switched to backup battery
+      xTaskNotifyFromISR(InitTaskNameHandle, 0x1, eSetValueWithOverwrite, &hptw);
+      portYIELD_FROM_ISR(hptw);
   }
 }
 

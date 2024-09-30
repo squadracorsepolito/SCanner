@@ -67,6 +67,7 @@ void Error_Handler(void);
 #define nRST_PHY_GPIO_OUT_GPIO_Port GPIOB
 #define GPIO_nST_Pin GPIO_PIN_6
 #define GPIO_nST_GPIO_Port GPIOC
+#define GPIO_nST_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 

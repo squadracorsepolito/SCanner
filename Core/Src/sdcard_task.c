@@ -17,6 +17,8 @@ xQueueHandle sdcardQueue;
 
 FIL *f1, *f2;
 
+char dirname[16];
+
 extern osEventFlagsId_t System_InitEventHandle;
 
 void sdcardInit() {
@@ -26,7 +28,6 @@ void sdcardInit() {
     DIR dir;
     uint16_t max = 0;
     uint16_t current;
-    char dirname[16];
     char filename1[32], filename2[32];
 
     res = f_opendir(&dir, "/");

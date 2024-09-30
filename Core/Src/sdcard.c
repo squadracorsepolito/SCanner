@@ -24,10 +24,17 @@ extern osMutexId_t SDCARD_DIR_LOCKHandle;
 extern osEventFlagsId_t System_InitEventHandle;
 
 FRESULT sdcard_init(void) {
-    FRESULT res = f_mount(&fs, "", 0);
+    FRESULT res = f_mount(&fs, "", 1);
     if(res == FR_OK)
         osEventFlagsSet(System_InitEventHandle, SDCARD_Init_Done);
     return res;
+}
+
+void sdcard_deinit(void) {
+    f_close(&log_f1);
+    f_close(&log_f2);
+    f_close(&f3);
+    f_closedir(&d);
 }
 
 FIL* sdcard_fopen(const TCHAR *path, BYTE mode, uint32_t timeout) {
