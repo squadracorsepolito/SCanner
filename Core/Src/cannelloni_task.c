@@ -6,10 +6,8 @@
 
 #define CNL_BUF_SIZE 32
 
-void cnl1_can_rx(cannelloni_handle_t *const handle);
-bool cnl1_can_tx(cannelloni_handle_t *const handle, struct canfd_frame *const frame);
-void cnl2_can_rx(cannelloni_handle_t *const handle);
-bool cnl2_can_tx(cannelloni_handle_t *const handle, struct canfd_frame *const frame);
+void cnl_can_rx(cannelloni_handle_t *const handle);
+bool cnl_can_tx(cannelloni_handle_t *const handle, struct canfd_frame *const frame);
 
 struct canfd_frame cnl1_tx_buf[CNL_BUF_SIZE];
 struct canfd_frame cnl1_rx_buf[CNL_BUF_SIZE];
@@ -24,32 +22,36 @@ cannelloni_handle_t cnl1_handle = {
     .Init = {
         .can_buf_size = CNL_BUF_SIZE,
         .can_rx_buf = cnl1_rx_buf,
-        .can_rx_fn = cnl1_can_rx,
+        .can_rx_fn = cnl_can_rx,
         .can_tx_buf = cnl1_tx_buf,
-        .can_tx_fn = cnl1_can_tx,
+        .can_tx_fn = cnl_can_tx,
         .port = 20000,
-        .remote_port = 20000
+        .remote_port = 20000,
+        .user_data = &can1_network
     }
 };
 cannelloni_handle_t cnl2_handle = {
     .Init = {
         .can_buf_size = CNL_BUF_SIZE,
         .can_rx_buf = cnl2_rx_buf,
-        .can_rx_fn = cnl2_can_rx,
+        .can_rx_fn = cnl_can_rx,
         .can_tx_buf = cnl2_tx_buf,
-        .can_tx_fn = cnl2_can_tx,
+        .can_tx_fn = cnl_can_tx,
         .port = 20001,
-        .remote_port = 20001
+        .remote_port = 20001,
+        .user_data = &can2_network
     }
 };
 
 extern osEventFlagsId_t System_InitEventHandle;
 
-void cnl1_can_rx(cannelloni_handle_t *const handle) {
-    while(canIsFramePending(&can1_network)) {
+void cnl_can_rx(cannelloni_handle_t *const handle) {
+    canNetwork_t *can_network = handle->Init.user_data;
+
+    while(canIsFramePending(can_network)) {
         CAN_frame_t msg;
         canRecv(&msg, &can1_network, 0);
-		struct canfd_frame *frame = get_can_rx_frame(&cnl1_handle);
+		struct canfd_frame *frame = get_can_rx_frame(handle);
 		if (frame) {
 			frame->can_id = msg.id;
 			frame->len = msg.dlc;
@@ -58,37 +60,15 @@ void cnl1_can_rx(cannelloni_handle_t *const handle) {
     }
 }
 
-bool cnl1_can_tx(cannelloni_handle_t *const handle, struct canfd_frame *const frame) {
+bool cnl_can_tx(cannelloni_handle_t *const handle, struct canfd_frame *const frame) {
     CAN_frame_t msg;
+    canNetwork_t *can_network = handle->Init.user_data;
 
     msg.id = frame->can_id;
     msg.dlc = frame->len;
     memcpy(msg.data, frame->data, frame->len);
 
-    return canSend(&msg, &can1_network, 0);
-}
-
-void cnl2_can_rx(cannelloni_handle_t *const handle) {
-    while(canIsFramePending(&can2_network)) {
-        CAN_frame_t msg;
-        canRecv(&msg, &can2_network, 0);
-		struct canfd_frame *frame = get_can_rx_frame(&cnl2_handle);
-		if (frame) {
-			frame->can_id = msg.id;
-			frame->len = msg.dlc;
-            memcpy(frame->data, msg.data, msg.dlc);
-		}
-    }
-}
-
-bool cnl2_can_tx(cannelloni_handle_t *const handle, struct canfd_frame *const frame) {
-    CAN_frame_t msg;
-
-    msg.id = frame->can_id;
-    msg.dlc = frame->len;
-    memcpy(msg.data, frame->data, frame->len);
-
-    return canSend(&msg, &can2_network, portMAX_DELAY);
+    return canSend(&msg, can_network, 0);
 }
 
 void cannelloniTask(const void * argument) {
@@ -101,7 +81,9 @@ void cannelloniTask(const void * argument) {
     UNLOCK_TCPIP_CORE();
 
     while(1) {
+        LOCK_TCPIP_CORE();
         run_cannelloni(handle);
+        UNLOCK_TCPIP_CORE();
         vTaskDelay(10);
     }
 }
