@@ -131,11 +131,11 @@ const osThreadAttr_t sdcardTaskName_attributes = {
   .cb_size = sizeof(sdcardTaskNameControlBlock),
   .stack_mem = &sdcardTaskNameBuffer[0],
   .stack_size = sizeof(sdcardTaskNameBuffer),
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for InitTaskName */
 osThreadId_t InitTaskNameHandle;
-uint32_t InitTaskNameBuffer[ 128 ];
+uint32_t InitTaskNameBuffer[ 512 ];
 osStaticThreadDef_t InitTaskNameControlBlock;
 const osThreadAttr_t InitTaskName_attributes = {
   .name = "InitTaskName",
@@ -288,8 +288,8 @@ void StartDefaultTask(void *argument)
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_InitTask */
 extern char dirname[16];
+/* USER CODE END Header_InitTask */
 void InitTask(void *argument)
 {
   /* USER CODE BEGIN InitTask */
@@ -318,8 +318,8 @@ void InitTask(void *argument)
       sdcardForceSync();
       sdcard_deinit();
 
-      sprintf(new_dirname, "%s_%lus", dirname, osKernelGetTickCount()/osKernelGetTickFreq());
-      f_rename(dirname, new_dirname);
+      // sprintf(new_dirname, "%s_%lus", dirname, osKernelGetTickCount()/osKernelGetTickFreq());
+      // volatile FRESULT res = f_rename(dirname, new_dirname);
 
       f_mount(NULL, "", 0);
 
@@ -334,8 +334,8 @@ void InitTask(void *argument)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   BaseType_t hptw;
   if(GPIO_Pin == 64) { //power source switched to backup battery
-    xTaskNotifyFromISR(InitTaskNameHandle, 0x1, eSetValueWithOverwrite, &hptw);
-    portYIELD_FROM_ISR(hptw);
+      xTaskNotifyFromISR(InitTaskNameHandle, 0x1, eSetValueWithOverwrite, &hptw);
+      portYIELD_FROM_ISR(hptw);
   }
 }
 

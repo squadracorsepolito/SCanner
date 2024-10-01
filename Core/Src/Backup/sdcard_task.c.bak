@@ -22,7 +22,7 @@ char dirname[16];
 extern osEventFlagsId_t System_InitEventHandle;
 
 void sdcardInit() {
-    sdcardQueue = xQueueCreate(32, sizeof(SDCARD_msg));
+    sdcardQueue = xQueueCreate(128, sizeof(SDCARD_msg));
     FRESULT res;
 
     DIR dir;
@@ -93,7 +93,7 @@ void sdcardTask(void *argument) {
             for(uint8_t i=0; i<msg.frame.dlc; ++i) {
                 sprintf(data_s+2*i, "%02X", msg.frame.data[i]);
             }
-            btw = sprintf(buf, "(%.6f) %s %03x#%s\r\n", (float)msg.timestamp/100000, msg.net == CAN_NET1 ? "mcb":"hvcb", msg.frame.id, data_s);
+            btw = sprintf(buf, "(%.6f) %s %03x#%s\n", (float)msg.timestamp/100000, msg.net == CAN_NET1 ? "mcb":"hvcb", msg.frame.id, data_s);
 
             if(msg.net == CAN_NET1) {
                 f_write(f1, buf, btw, &bw);
@@ -101,12 +101,13 @@ void sdcardTask(void *argument) {
                 f_write(f2, buf, btw, &bw);
             }
 
-            if(osKernelGetSysTimerCount() - now > 2000) {
+            if(osKernelGetSysTimerCount() - now > 1000) {
                 now = osKernelGetTickCount();
                 f_sync(f1);
                 f_sync(f2);
             }
         } else {
+            now = osKernelGetTickCount();
             f_sync(f1);
             f_sync(f2);
         }

@@ -19,5 +19,6 @@
         "usart.h": "c",
         "http_server.h": "c",
         "ff.h": "c"
-    }
+    },
+    "makefile.configureOnOpen": true
 }

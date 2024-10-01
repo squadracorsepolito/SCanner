@@ -146,9 +146,14 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_h, frame.data);
         frame.id = rx_h.Identifier;
         frame.dlc = rx_h.DataLength;
+        exCounter |= rx_h.RxTimestamp;
+
+        if(exCounter / 100 > osKernelGetTickCount() + 300) {
+            exCounter -= 1 << 16;
+        }
 
         xQueueSendToBackFromISR(can1_network.rx_queue, &frame, &hptw);
-        sdcardAddMsgFromISR(&frame, CAN_NET1, exCounter | rx_h.RxTimestamp, &hptw);
+        sdcardAddMsgFromISR(&frame, CAN_NET1, exCounter, &hptw);
         portYIELD_FROM_ISR( hptw );
     }
 }
@@ -163,9 +168,14 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo1ITs)
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO1, &rx_h, frame.data);
         frame.id = rx_h.Identifier;
         frame.dlc = rx_h.DataLength;
+        exCounter |= rx_h.RxTimestamp;
+
+        if(exCounter / 100 > osKernelGetTickCount() + 300) {
+            exCounter -= 1 << 16;
+        }
 
         xQueueSendToBackFromISR(can2_network.rx_queue, &frame, &hptw);
-        sdcardAddMsgFromISR(&frame, CAN_NET2, exCounter | rx_h.RxTimestamp, &hptw);
+        sdcardAddMsgFromISR(&frame, CAN_NET2, exCounter, &hptw);
         portYIELD_FROM_ISR( hptw );
     }
 }

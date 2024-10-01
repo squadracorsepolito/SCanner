@@ -22,7 +22,7 @@ char dirname[16];
 extern osEventFlagsId_t System_InitEventHandle;
 
 void sdcardInit() {
-    sdcardQueue = xQueueCreate(32, sizeof(SDCARD_msg));
+    sdcardQueue = xQueueCreate(128, sizeof(SDCARD_msg));
     FRESULT res;
 
     DIR dir;

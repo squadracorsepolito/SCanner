@@ -123,7 +123,7 @@ const osThreadAttr_t cnl2TaskName_attributes = {
 };
 /* Definitions for sdcardTaskName */
 osThreadId_t sdcardTaskNameHandle;
-uint32_t sdcardTaskNameBuffer[ 512 ];
+uint32_t sdcardTaskNameBuffer[ 2048 ];
 osStaticThreadDef_t sdcardTaskNameControlBlock;
 const osThreadAttr_t sdcardTaskName_attributes = {
   .name = "sdcardTaskName",
@@ -131,7 +131,7 @@ const osThreadAttr_t sdcardTaskName_attributes = {
   .cb_size = sizeof(sdcardTaskNameControlBlock),
   .stack_mem = &sdcardTaskNameBuffer[0],
   .stack_size = sizeof(sdcardTaskNameBuffer),
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for InitTaskName */
 osThreadId_t InitTaskNameHandle;
