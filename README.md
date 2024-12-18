@@ -23,7 +23,7 @@ To set up and run SCanner on your system, follow these steps:
 1. **Clone the Repository**:
 
    ```bash
-   git clone https://github.com/squadracorsepolito/SCanner.git
+   git clone --recursive https://github.com/squadracorsepolito/SCanner.git
    cd SCanner
    ```
 
